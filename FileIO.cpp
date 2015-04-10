@@ -269,9 +269,9 @@ bool WritePointCloud(string filename, PointCloud pointCloud, Mat image, FileForm
 		fout << "Rows " << data.rows << endl;
 		fout << "Columns " << data.cols << endl;
 		fout << "Order_By_Row" << endl;
-		fout << "Mean_Distance " << (int)(pointCloud.meanDistance + 0.5f) << endl;
-		fout << "Min_Distance " << (int)(pointCloud.minDistance + 0.5f) << endl;
-		fout << "Max_Distance " << (int)(pointCloud.maxDistance + 0.5f) << endl;
+		fout << "Mean_Distance " << pointCloud.meanDistance << endl;
+		fout << "Min_Distance " << pointCloud.minDistance << endl;
+		fout << "Max_Distance " << pointCloud.maxDistance << endl;
 
 		// write the integer values one at a time by rows
 		for (int iRow=0; iRow<data.rows; iRow++)
@@ -281,7 +281,7 @@ bool WritePointCloud(string filename, PointCloud pointCloud, Mat image, FileForm
 				if (data.at<Vec3f>(iRow,iCol)[2] <= 0.0f)
 					fout << 0 << " " << 0 << " " << 0 << endl;
 				else
-					fout << (int)(data.at<Vec3f>(iRow,iCol)[0] + 0.5f) << " " << (int)(data.at<Vec3f>(iRow,iCol)[1] + 0.5f) << " " << (int)(data.at<Vec3f>(iRow,iCol)[2] + 0.5f) << endl;	// x,y,z coordinates
+					fout << data.at<Vec3f>(iRow,iCol)[0] << " " << data.at<Vec3f>(iRow,iCol)[1] << " " << data.at<Vec3f>(iRow,iCol)[2] << endl;	// x,y,z coordinates
 			}
 		}
 
@@ -321,17 +321,17 @@ bool WritePointCloud(string filename, PointCloud pointCloud, Mat image, FileForm
 				if (data.at<Vec3f>(iRow,iCol)[2] <= 0.0f)
 				{
 					// non-valid disparity  x,y,z coordinates
-					fout << (int)(xMin + (xRange*(float)iCol/(float)data.cols) + 0.5f) << " ";
-					fout << (int)(yMin + (yRange*(float)iRow/(float)data.rows) + 0.5f) << " ";
-					fout << int(pointCloud.maxDistance + 0.5f) << endl;
+					fout << xMin + (xRange*(float)iCol/(float)data.cols) << " ";
+					fout << yMin + (yRange*(float)iRow/(float)data.rows) << " ";
+					fout << pointCloud.maxDistance << endl;
 				}
 				else
 				{
 					// perspective-corrected x,y,z coordinates
 					perspective = pointCloud.meanDistance / data.at<Vec3f>(iRow,iCol)[2];
-					fout << (int)(data.at<Vec3f>(iRow,iCol)[0] * perspective + 0.5f) << " ";
-					fout << (int)(data.at<Vec3f>(iRow,iCol)[1] * perspective + 0.5f) << " ";
-					fout << (int)(data.at<Vec3f>(iRow,iCol)[2] + 0.5f) << endl;
+					fout << data.at<Vec3f>(iRow,iCol)[0] * perspective << " ";
+					fout << data.at<Vec3f>(iRow,iCol)[1] * perspective << " ";
+					fout << data.at<Vec3f>(iRow,iCol)[2] << endl;
 				}
 			}
 		}
@@ -360,9 +360,9 @@ bool WritePointCloud(string filename, PointCloud pointCloud, Mat image, FileForm
 
 		// write out header indicating number of rows, columns, and camera-to-subject distances
 		Mat data = pointCloud.data;
-		int meanDistance = (int)(pointCloud.meanDistance + 0.5f);
-		int minDistance = (int)(pointCloud.minDistance + 0.5f);
-		int maxDistance = (int)(pointCloud.maxDistance + 0.5f);
+		float meanDistance = pointCloud.meanDistance;
+		float minDistance = pointCloud.minDistance;
+		float maxDistance = pointCloud.maxDistance;
 		fout.write((char*)&data.rows, sizeof(data.rows));
 		fout.write((char*)&data.cols, sizeof(data.cols));
 		fout.write((char*)&meanDistance, sizeof(meanDistance));
@@ -370,7 +370,7 @@ bool WritePointCloud(string filename, PointCloud pointCloud, Mat image, FileForm
 		fout.write((char*)&maxDistance, sizeof(maxDistance));
 
 		// write the integer values one at a time by rows
-		int x, y, z, zero = 0;
+		float x, y, z, zero = 0.0f;
 		for (int iRow=0; iRow<data.rows; iRow++)
 		{
 			for (int iCol=0; iCol<data.cols; iCol++)
@@ -385,9 +385,9 @@ bool WritePointCloud(string filename, PointCloud pointCloud, Mat image, FileForm
 				else
 				{
 					// x, y, z coordinate (valid disparity)
-					x = (int)( data.at<Vec3f>(iRow,iCol)[0] + 0.5f);
-					y = (int)( data.at<Vec3f>(iRow,iCol)[1] + 0.5f);
-					z = (int)( data.at<Vec3f>(iRow,iCol)[2] + 0.5f);
+					x = data.at<Vec3f>(iRow,iCol)[0];
+					y = data.at<Vec3f>(iRow,iCol)[1];
+					z = data.at<Vec3f>(iRow,iCol)[2];
 					fout.write((char*)&x, sizeof(x));
 					fout.write((char*)&y, sizeof(y));
 					fout.write((char*)&z, sizeof(z));
