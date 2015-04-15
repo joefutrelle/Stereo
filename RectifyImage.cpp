@@ -14,9 +14,7 @@
 //                                                                               //
 //===============================================================================//
 
-#include "GlobalDefines.h"
 #include "RectifyImage.h"
-#include "FileIO.h"
 
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -44,7 +42,7 @@ Mat RectifyImage(Mat image, Mat M1, Mat D1, Mat R1, Mat P1, Mat M2, Mat D2, Mat 
 	initUndistortRectifyMap(M1, D1, R1, P1, imageSize, CV_16SC2, map11, map12);
 	initUndistortRectifyMap(M2, D2, R2, P2, imageSize, CV_16SC2, map21, map22);
 
-	// remap the original images into rectification space
+	// remap the original images into rectification space (note: can accept 8, 16, or 32 bit formats)
 	remap(imageLeft, imageLeftRectified, map11, map12, CV_INTER_LINEAR);
 	remap(imageRight, imageRightRectified, map21, map22, CV_INTER_LINEAR);
 
@@ -63,10 +61,14 @@ Mat RectifyImage(Mat image, Mat M1, Mat D1, Mat R1, Mat P1, Mat M2, Mat D2, Mat 
 		canvas.create(h, w*2, CV_8UC3);
 
 		imageTemp = imageLeftRectified.clone();
+		if (imageTemp.type() != CV_8UC3)
+			imageTemp.convertTo(imageTemp, CV_8UC3, 1.0/256.0);
 		Mat canvasPart = canvas(Rect(w*0, 0, w, h));
 		resize(imageTemp, canvasPart, canvasPart.size(), 0, 0, CV_INTER_AREA);
 
 		imageTemp = imageRightRectified.clone();
+		if (imageTemp.type() != CV_8UC3)
+			imageTemp.convertTo(imageTemp, CV_8UC3, 1.0/256.0);
 		canvasPart = canvas(Rect(w*1, 0, w, h));
 		resize(imageTemp, canvasPart, canvasPart.size(), 0, 0, CV_INTER_AREA);
 

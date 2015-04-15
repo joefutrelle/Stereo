@@ -80,12 +80,17 @@ int main(int argc, char** argv)
 	for (int i=0; i<(int)inputList.size(); i++)
 	{
 		// read the image to be processed
-		Mat image = imread(inputList[i]);
+		Mat image = imread(inputList[i], CV_LOAD_IMAGE_ANYCOLOR | CV_LOAD_IMAGE_ANYDEPTH);
 		if (image.empty())
 		{
 			cout << "Error in mainRectify: unable to either find or read image " << inputList[i] << endl;
 			continue;
 		}
+
+		// check for tiff files and debayer if so (output is CV_U16C3 matrix type)
+		unsigned found = (unsigned)inputList[i].find_last_of(".");
+		if (inputList[i].substr(found+1) == "tif" || inputList[i].substr(found+1) == "tiff")
+			cvtColor(image, image, CV_BayerRG2BGR);
 
 		// rectify the image pair
 		if (parameter.doNotRectify)
@@ -107,7 +112,7 @@ int main(int argc, char** argv)
 
 		// save the point cloud to disk
 		cout << "Saving point cloud" << endl;
-		string filename = "C:/Users/Peterh~1/Desktop/PointCloud";
+		string filename = "C:/Users/Peterh~1/Desktop/PointCloud";	//*********** TEMPORARY UNTIL WE AGREE ON WHERE IT SHOULD GO *******
 		if (!WritePointCloud(filename, pointCloud, imageRectified, MESH))
 			cout << endl << " ERROR in function WritePointCloud: Could not open " << filename << endl;
 	}

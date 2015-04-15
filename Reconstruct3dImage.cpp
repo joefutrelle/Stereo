@@ -14,9 +14,7 @@
 //                                                                               //
 //===============================================================================//
 
-#include "GlobalDefines.h"
 #include "Reconstruct3dImage.h"
-#include "FileIO.h"
 
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -45,6 +43,13 @@ PointCloud Reconstruct3dImage(Mat image, Mat Q, bool displayImage, bool pauseFor
 
 	// trim off 25 pixels for black edges due to correction of lens distortion
 	image = image(Rect(trim, trim, image.cols-(2*trim), image.rows-(2*trim))).clone();
+
+	// if needed, convert to 8 bits per channel and scale intensity range to 0-255
+	if (image.type() != CV_8UC3)
+	{
+		minMaxLoc(image, &minVal, &maxVal);
+		image.convertTo(image, CV_8UC3, 255./(maxVal-minVal), -minVal*255./(maxVal-minVal));
+	}
 
 	// crop the image to remove right stereo half
 	imageLeft = image(Rect(0, 0, image.cols/2, image.rows)).clone();
@@ -77,7 +82,7 @@ PointCloud Reconstruct3dImage(Mat image, Mat Q, bool displayImage, bool pauseFor
 	// sum all the masks to get disparity values + trim compensation at valid pixels and -1 at invalid pixels
 	disparity = maskValid + maskOffset + maskInvalid;
 
-	// compute mean value of all valid disparity pixels to determine the non-overlapping region of the left image
+	// FIRST ITERATION: compute mean value of all valid disparity pixels to determine the non-overlapping region of the left image
 	maskValid.convertTo(maskValid8U, CV_8UC1);
 	Scalar meanDisparityScalar = mean(disparity, maskValid8U);	// mask must be type CV_8UC1
 	float meanDisparity = (float)meanDisparityScalar.val[0];
@@ -91,24 +96,24 @@ PointCloud Reconstruct3dImage(Mat image, Mat Q, bool displayImage, bool pauseFor
 	pointCloud.trimTop = trim;
 	pointCloud.trimBottom = trim;
 
-	// get new mask for valid pixels, find the minimum and maximum disparities and the refine mean disparity
+	// SECOND ITERATION: get new mask for valid pixels, find the minimum and maximum disparities and the refine mean disparity
 	threshold(disparity, maskValid, 0.0, 1.0, THRESH_TOZERO);	// mask values at valid pixels are 1, otherwise 0
 	maskValid.convertTo(maskValid8U, CV_8UC1);
 	minMaxLoc(disparity, &minVal, &maxVal, 0, 0, maskValid8U);	// mask must be type CV_8UC1
 	meanDisparityScalar = mean(disparity, maskValid8U);
 	meanDisparity = (float)meanDisparityScalar.val[0];
 
-	// compute MIN distance (from MAXimum disparity)
+	// compute MIN distance in world coordinates (from MAXimum disparity)
 	pointMatrix.at<float>(0,0) = (float) maxVal;
 	reprojectImageTo3D(pointMatrix, pointMatrix3D, Q);
 	pointCloud.minDistance = pointMatrix3D.at<Vec3f>(0,0)[2] * waterRefractionIndex;	// correct for water density
 
-	// compute MAX distance (from MINimum disparity)
+	// compute MAX distance in world coordinates (from MINimum disparity)
 	pointMatrix.at<float>(0,0) = (float) minVal;
 	reprojectImageTo3D(pointMatrix, pointMatrix3D, Q);
 	pointCloud.maxDistance = pointMatrix3D.at<Vec3f>(0,0)[2] * waterRefractionIndex;	// correct for water density
 
-	// compute mean distance
+	// compute mean distance in world coordinates
 	pointMatrix.at<float>(0,0) =  meanDisparity;
 	reprojectImageTo3D(pointMatrix, pointMatrix3D, Q);
 	pointCloud.meanDistance = pointMatrix3D.at<Vec3f>(0,0)[2] * waterRefractionIndex;	// correct for water density
@@ -120,7 +125,7 @@ PointCloud Reconstruct3dImage(Mat image, Mat Q, bool displayImage, bool pauseFor
 	pointCloudChannels[2] = pointCloudChannels[2] * waterRefractionIndex;
 	merge(pointCloudChannels, pointCloud.data);
 
-	// get x and y range of 3D coordinates in cloud
+	// get x and y range of 3D world coordinates of cloud
 	minMaxLoc(pointCloudChannels[0], &minVal, &maxVal, 0, 0, maskValid8U);
 	pointCloud.minX3D = (float) minVal;
 	pointCloud.maxX3D = (float) maxVal;
