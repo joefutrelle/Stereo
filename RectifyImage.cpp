@@ -28,7 +28,7 @@
 using namespace cv;
 using namespace std;
 
-Mat RectifyImage(Mat image, Mat M1, Mat D1, Mat R1, Mat P1, Mat M2, Mat D2, Mat R2, Mat P2, bool displayImage, bool pauseForKeystroke)
+Mat RectifyImage(Mat image, CameraMatrix cameraMatrix, bool displayImage, bool pauseForKeystroke)
 {
 	Mat imageLeft, imageRight, imageLeftRectified, imageRightRectified, imageRectified;
 
@@ -39,8 +39,8 @@ Mat RectifyImage(Mat image, Mat M1, Mat D1, Mat R1, Mat P1, Mat M2, Mat D2, Mat 
 	// precompute maps used to create undistorted rectified images
 	Size imageSize = imageLeft.size();
 	Mat map11, map12, map21, map22;
-	initUndistortRectifyMap(M1, D1, R1, P1, imageSize, CV_16SC2, map11, map12);
-	initUndistortRectifyMap(M2, D2, R2, P2, imageSize, CV_16SC2, map21, map22);
+	initUndistortRectifyMap(cameraMatrix.M1, cameraMatrix.D1, cameraMatrix.R1, cameraMatrix.P1, imageSize, CV_16SC2, map11, map12);
+	initUndistortRectifyMap(cameraMatrix.M2, cameraMatrix.D2, cameraMatrix.R2, cameraMatrix.P2, imageSize, CV_16SC2, map21, map22);
 
 	// remap the original images into rectification space (note: can accept 8, 16, or 32 bit formats)
 	remap(imageLeft, imageLeftRectified, map11, map12, CV_INTER_LINEAR);

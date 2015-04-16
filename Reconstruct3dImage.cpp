@@ -30,18 +30,19 @@ using namespace cv;
 using namespace std;
 
 
-PointCloud Reconstruct3dImage(Mat image, Mat Q, bool displayImage, bool pauseForKeystroke)
+PointCloud Reconstruct3dImage(Mat image, CameraMatrix cameraMatrix, bool displayImage, bool pauseForKeystroke)
 {
 	PointCloud pointCloud;
 	Mat imageLeft, imageRight, disparity;
 	Mat maskValid8U, maskValid, maskInvalid, maskOffset;
 	Mat pointMatrix = Mat(1, 1, CV_32FC1), pointMatrix3D;
 	double minVal, maxVal;
+
 	double minMeanDisparity = 207.;			// lower limit of mean disparity (725500 / 207 disparity = 3500mm distance of camera)
 	float waterRefractionIndex = 1.33f;		// 1.33 for salt water
 	int trim = 25;							// amount to trim off each edge to because of image rotation
 
-	// trim off 25 pixels for black edges due to correction of lens distortion
+	// trim off pixels for black edges due to correction of lens distortion
 	image = image(Rect(trim, trim, image.cols-(2*trim), image.rows-(2*trim))).clone();
 
 	// if needed, convert to 8 bits per channel and scale intensity range to 0-255
@@ -105,21 +106,21 @@ PointCloud Reconstruct3dImage(Mat image, Mat Q, bool displayImage, bool pauseFor
 
 	// compute MIN distance in world coordinates (from MAXimum disparity)
 	pointMatrix.at<float>(0,0) = (float) maxVal;
-	reprojectImageTo3D(pointMatrix, pointMatrix3D, Q);
+	reprojectImageTo3D(pointMatrix, pointMatrix3D, cameraMatrix.Q);
 	pointCloud.minDistance = pointMatrix3D.at<Vec3f>(0,0)[2] * waterRefractionIndex;	// correct for water density
 
 	// compute MAX distance in world coordinates (from MINimum disparity)
 	pointMatrix.at<float>(0,0) = (float) minVal;
-	reprojectImageTo3D(pointMatrix, pointMatrix3D, Q);
+	reprojectImageTo3D(pointMatrix, pointMatrix3D, cameraMatrix.Q);
 	pointCloud.maxDistance = pointMatrix3D.at<Vec3f>(0,0)[2] * waterRefractionIndex;	// correct for water density
 
 	// compute mean distance in world coordinates
 	pointMatrix.at<float>(0,0) =  meanDisparity;
-	reprojectImageTo3D(pointMatrix, pointMatrix3D, Q);
+	reprojectImageTo3D(pointMatrix, pointMatrix3D, cameraMatrix.Q);
 	pointCloud.meanDistance = pointMatrix3D.at<Vec3f>(0,0)[2] * waterRefractionIndex;	// correct for water density
 
 	// generate 3D point cloud from disparity map and correct for water density (adjust Z value only)
-	reprojectImageTo3D(disparity, pointCloud.data, Q);
+	reprojectImageTo3D(disparity, pointCloud.data, cameraMatrix.Q);
 	vector<Mat> pointCloudChannels;
 	split(pointCloud.data, pointCloudChannels);
 	pointCloudChannels[2] = pointCloudChannels[2] * waterRefractionIndex;
