@@ -1,0 +1,25 @@
+// Note: the double slash makes any line a comment
+
+
+// Physical definitions of calibration chessboard
+single_square_size 80
+horizontal_count   7
+vertical_count     6
+
+
+// Location of directory where calibration data will be written and location of calibration chessboard image list
+calibration_data_directory C:/Users/PeterHonig/Stereo/CalibrationData
+calibration_image_listfile C:/Users/PeterHonig/Stereo/FileLists/CalibrationImageList.txt
+
+
+// Option to help debugging by displaying interim results
+display_rectified_image
+
+
+// If you did use either of the two display options, this option will pause for any key before continueing
+// with the exception that "q", "Q", or ESC will cause immediate termination of the executable
+pause_for_keystroke
+
+
+// Note: parameters for both calibration and rectification can be combined into one parameter file,
+//       as the non-relevent definition will merely be ignored.
