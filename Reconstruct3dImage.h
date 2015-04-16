@@ -9,16 +9,12 @@
 #ifndef Reconstruct3dImage_H_
 #define Reconstruct3dImage_H_
 
-#include "GlobalDefines.h"
+#include "StereoStructDefines.h"
 #include <opencv2/core/core.hpp>
 
-#include <string>
 #include <vector>
 
-using namespace cv;
-using namespace std;
-
-PointCloud Reconstruct3dImage(Mat image, Mat Q, bool displayImage=false, bool pauseForKeystroke=false);
-void triangle(Mat matrix, Point p1, Point p2, Point p3, Scalar fillValue);
+PointCloud Reconstruct3dImage(cv::Mat image, CameraMatrix cameraMatrix, bool displayImage=false, bool pauseForKeystroke=false);
+void triangle(cv::Mat matrix, cv::Point p1, cv::Point p2, cv::Point p3, cv::Scalar fillValue);
 
 #endif
