@@ -3,7 +3,7 @@ CXXFLAGS=-ggdb -O3 -std=c++0x
 LDLIBS=-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopencv_calib3d
 
 SRCS1=mainCalibrate.cpp CalibrateStereoCamera.cpp FileIO.cpp
-SRCS2=mainRectify.cpp RectifyImage.cpp Reconstruct3dImage.cpp FileIO.cpp
+SRCS2=mainRectify.cpp AltitudeFromStereo.cpp RectifyImage.cpp Reconstruct3dImage.cpp DataIO.cpp FileIO.cpp demosaic.cpp
 
 OBJS1=$(subst .cpp,.o,$(SRCS1))
 OBJS2=$(subst .cpp,.o,$(SRCS2))
