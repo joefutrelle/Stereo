@@ -1,0 +1,2 @@
+C:/Users/PeterHonig/Stereo/TestImages/201403.20140701.142555089.33750.png,C:/Users/PeterHonig/Stereo/RectifiedImages/201403.20140701.142555089.33750.png
+C:/Users/PeterHonig/Stereo/TestImages/201403.20140701.210528508.12950.png,C:/Users/PeterHonig/Stereo/RectifiedImages/201403.20140701.210528508.12950.png

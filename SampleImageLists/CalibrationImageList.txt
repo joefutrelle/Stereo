@@ -1,0 +1,6 @@
+C:/Users/PeterHonig/Stereo/CalibrationImages/201404.20140507.180019382left.png
+C:/Users/PeterHonig/Stereo/CalibrationImages/201404.20140507.180019382right.png
+C:/Users/PeterHonig/Stereo/CalibrationImages/201404.20140507.180051448left.png
+C:/Users/PeterHonig/Stereo/CalibrationImages/201404.20140507.180051448right.png
+C:/Users/PeterHonig/Stereo/CalibrationImages/201404.20140507.180057461left.png
+C:/Users/PeterHonig/Stereo/CalibrationImages/201404.20140507.180057461right.png
