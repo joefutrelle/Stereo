@@ -56,7 +56,7 @@ int main(int argc, char** argv)
 
 	// Calibrate the stereo camera rig from the list of chessboard calibration images
 	CalibrateStereoCamera(imageList, Size(parameter.nHorizontal, parameter.nVertical), parameter.squareSize,
-						parameter.calibrationDataDirectory, parameter.displayImage, parameter.pauseForKeystroke);
+						parameter.calibrationDataDirectory, parameter.displayRectifiedImage, parameter.pauseForKeystroke);
 	
 	return 0;
 }
