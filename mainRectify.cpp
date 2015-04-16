@@ -14,15 +14,15 @@
 //===============================================================================//
 
 #include "GlobalDefines.h"
-#include "RectifyImage.h"
-#include "Reconstruct3dImage.h"
+#include "StereoStructDefines.h"	// needed for camera matrix and point cloud structs, as well as point cloud file enum
+#include "AltitudeFromStereo.h"		// needed for doing the bulk of the computation
 #include "FileIO.h"
+#include "DataIO.h"					// needed for output of point cloud file
+#include "demosaic.hpp"
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-
-#include <iostream>
 
 using namespace cv;
 using namespace std;
@@ -32,8 +32,8 @@ int main(int argc, char** argv)
 {
 	Parameters parameter;
 	PointCloud pointCloud;
+	CameraMatrix cameraMatrix;
 	Mat image, imageRectified;
-	Mat R, T, Q, M1, D1, R1, P1, M2, D2, R2, P2;
 
 	// get user parameters from file
 	if (argc >= 2)
@@ -53,19 +53,14 @@ int main(int argc, char** argv)
 	// validate and print the parameters for this run
 	ValidateRuntimeParameters(parameter, RECTIFY);
 
-	// get the intrinsic matrices from previous calibration
-	if (!ReadIntrinsicMatrices(parameter.calibrationDataDirectory, M1, D1, M2, D2))
+	//*********************************************** NEEDED FOR COMPUTATION SECTION BELOW ****************************
+	// get the intrinsic and extrinsic matrices from previous calibration
+	if (!ReadCameraMatrices(parameter.calibrationDataDirectory, cameraMatrix))
 	{
-		cout << "Error in ReadIntrinsicMatrices: Can't open/find the intrinsic matrix file" << endl;
+		cout << "Error in ReadCameraMatrices: Can't open/find the intrinsic/extrinsic matrix file" << endl;
 		return -1;
 	}
-
-	// get the extrinsic matrices from previous calibration
-	if (!ReadExtrinsicMatrices(parameter.calibrationDataDirectory, R, T, R1, R2, P1, P2, Q))
-	{
-		cout << "Error in ReadExtrinsicMatrices: Can't open/find the extrinsic matrix file" << endl;
-		return -1;
-	}
+	//******************************************************************************************************************
 
 	// get the list of images to be rectified
 	vector<string> inputList, outputList;
@@ -90,32 +85,42 @@ int main(int argc, char** argv)
 		// check for tiff files and debayer if so (output is CV_U16C3 matrix type)
 		unsigned found = (unsigned)inputList[i].find_last_of(".");
 		if (inputList[i].substr(found+1) == "tif" || inputList[i].substr(found+1) == "tiff")
-			cvtColor(image, image, CV_BayerRG2BGR);
-
-		// rectify the image pair
-		if (parameter.doNotRectify)
 		{
-			cout << "Skipping rectification of image " << i+1 << " of " << inputList.size() << endl;
-			imageRectified = image;
+			//cvtColor(image, image, CV_BayerBG2BGR);		// CV_BayerBG2BGR is RGGB
+			image = demosaic(image, "RGGB");
+		}
+
+		//***************************** THIS SECTION IS WHERE WE DO ALL THE WORK ******************************************
+
+		// input image and cameraMatrix, output imageRectified and pointCloud (and altitude of course)
+		cout << "Computing rectification, point cloud and altitude " << i+1 << " of " << inputList.size() << endl;
+		float altitude = AltitudeFromStereo(image, cameraMatrix, imageRectified, pointCloud,
+			parameter.doNotRectify, parameter.displayRectifiedImage, parameter.displayDisparityImage, parameter.pauseForKeystroke);
+
+		// check altitude for a valid range (1 to 3 1/2 meters perhaps?) and save data if okay
+		if (altitude < 1000.0f || altitude > 3500.0f)
+		{
+			cout << "Invalid computed altitude. Skipping file " << inputList[i] << endl;
+			continue;
 		}
 		else
 		{
-			cout << "Rectifying image " << i+1 << " of " << inputList.size() << endl;
-			imageRectified = RectifyImage(image, M1, D1, R1, P1, M2, D2, R2, P2, parameter.displayRectifiedImage, parameter.pauseForKeystroke);
-			cout << "Saving rectified image pair" << endl;
-			imwrite(outputList[i], imageRectified);
+			// save the rectified image pair to disk
+			if (!parameter.doNotRectify)
+			{
+				cout << "Saving rectified image pair" << endl;
+				if (!imwrite(outputList[i], imageRectified))
+					cout << endl << "ERROR in function WritePointCloud: Could not open/save " << outputList[i] << endl;
+			}
+			// save the point cloud to disk
+			cout << "Saving point cloud" << endl;
+			string filename = "C:/Users/Peterh~1/Desktop/PointCloud" + toString(i);	//*********** TEMPORARY UNTIL WE AGREE ON WHERE IT SHOULD GO *******
+			if (!WritePointCloud(filename, pointCloud, imageRectified, PC_BINARY))
+				cout << endl << "ERROR in function WritePointCloud: Could not open/save " << filename << endl;
 		}
-
-		// generate point cloud
-		cout << "Computing disparity image and point cloud" << endl;
-		pointCloud = Reconstruct3dImage(imageRectified, Q, parameter.displayDisparityImage, parameter.pauseForKeystroke);
-
-		// save the point cloud to disk
-		cout << "Saving point cloud" << endl;
-		string filename = "C:/Users/Peterh~1/Desktop/PointCloud";	//*********** TEMPORARY UNTIL WE AGREE ON WHERE IT SHOULD GO *******
-		if (!WritePointCloud(filename, pointCloud, imageRectified, MESH))
-			cout << endl << " ERROR in function WritePointCloud: Could not open " << filename << endl;
+		//*****************************************************************************************************************
 	}
 
+	// all done
 	return 0;
 }
