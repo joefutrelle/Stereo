@@ -19,7 +19,7 @@ enum ApplicationMode {CALIBRATE, RECTIFY};
 // number-to-string conversion function
 template <typename T> std::string toString(const T& t)
 {
-	ostringstream s;
+	std::ostringstream s;
 	s << t;
 	return s.str();
 }
