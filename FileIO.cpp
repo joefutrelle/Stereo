@@ -24,7 +24,7 @@ bool ReadImageListFromFile(string imageListFile, vector<string> &directoryList, 
 {
 	// open an ascii file and read the file names as strings
 	ifstream fin;
-	fin.open(imageListFile);
+	fin.open(imageListFile.c_str());
 	if(!fin.good() || fin.bad())
 	{
 		cout << endl << " ERROR in function ReadImageListFromFile: Could not open " << imageListFile << endl;
@@ -65,7 +65,7 @@ bool ReadTwoImageListsFromFile(string imageListFile, vector<string> &inputList, 
 {
 	// open an ascii file and read the file names as strings
 	ifstream fin;
-	fin.open(imageListFile);
+	fin.open(imageListFile.c_str());
 	if(!fin.good() || fin.bad())
 	{
 		cout << endl << " ERROR in function ReadImageListFromFile: Could not open " << imageListFile << endl;
@@ -106,7 +106,7 @@ bool ReadRuntimeParameters(string filePath, Parameters &parameter)
 {
 	// open an ascii file for input
 	ifstream fin;
-	fin.open(filePath);
+	fin.open(filePath.c_str());
 	if(!fin.good() || fin.bad())
 		return false;
 

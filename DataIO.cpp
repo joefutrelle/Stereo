@@ -75,7 +75,7 @@ bool WritePointCloud(string filename, PointCloud pointCloud, Mat image, FileForm
 	{
 		// open an ascii file for output
 		ofstream fout;
-		fout.open(filename+".txt");
+		fout.open((filename+".txt").c_str());
 		if(!fout.good() || fout.bad())
 			return false;
 
@@ -116,7 +116,7 @@ bool WritePointCloud(string filename, PointCloud pointCloud, Mat image, FileForm
 		
 		// open an ascii file for output
 		ofstream fout;
-		fout.open(filename+".xyz");
+		fout.open((filename+".xyz").c_str());
 		if(!fout.good() || fout.bad())
 			return false;
 
@@ -176,7 +176,8 @@ bool WritePointCloud(string filename, PointCloud pointCloud, Mat image, FileForm
 
 		// open a binary file for output
 		ofstream fout;
-		fout.open(filename+".dat", ios::binary);
+		
+		fout.open((filename+".dat").c_str(), ios::binary);
 		if(!fout.good() || fout.bad())
 			return false;
 
